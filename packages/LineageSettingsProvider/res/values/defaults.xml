@@ -74,6 +74,6 @@
     <!-- Defaults for AOSP Global -->
 
     <!-- Default for Settings.Global.DISABLE_WINDOW_BLURS -->
-    <integer name="def_disable_window_blurs">0</integer>
+    <integer name="def_disable_window_blurs">1</integer>
 
 </resources>
