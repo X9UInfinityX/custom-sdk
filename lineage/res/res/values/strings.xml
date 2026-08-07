@@ -130,4 +130,6 @@
     <string name="charging_control_notification_content_limit_reached">Battery is charged to %1$d%%</string>
     <string name="charging_control_notification_content_target">Battery will be fully charged at %1$s</string>
     <string name="charging_control_notification_content_target_reached">Battery is charged</string>
+    <string name="bypass_charging_notification_title">Bypass charging active</string>
+    <string name="bypass_charging_notification_content">Battery charging is paused at %1$d%%</string>
 </resources>
