@@ -15,6 +15,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.provider.Settings;
 
 import org.lineageos.platform.internal.R;
 
@@ -29,6 +30,7 @@ public class ChargingControlNotification {
     private static final String ACTION_CHARGING_CONTROL_CANCEL_ONCE =
             "lineageos.platform.intent.action.CHARGING_CONTROL_CANCEL_ONCE";
     private static final String CHARGING_CONTROL_CHANNEL_ID = "LineageHealthChargingControl";
+    private static final String BYPASS_CHARGE_ACTIVE = "bypass_charge_active";
 
     private final ChargingControlController mChargingControlController;
 
@@ -106,6 +108,11 @@ public class ChargingControlNotification {
     }
 
     private void postChargingControlNotification(Long targetTime, int limit) {
+        if (isBypassChargingActive()) {
+            postBypassChargingNotification(limit);
+            return;
+        }
+
         String title = mContext.getString(R.string.charging_control_notification_title);
         String message = null;
 
@@ -155,6 +162,11 @@ public class ChargingControlNotification {
     private void postChargingDoneNotification(Long targetTime, int limit) {
         cancelChargingControlNotification();
 
+        if (isBypassChargingActive()) {
+            postBypassChargingNotification(limit);
+            return;
+        }
+
         String title = mContext.getString(R.string.charging_control_notification_title);
         String message;
         if (targetTime != null) {
@@ -191,6 +203,32 @@ public class ChargingControlNotification {
 
         createNotificationChannelIfNeeded();
         mNotificationManager.notify(CHARGING_CONTROL_NOTIFICATION_ID, notification.build());
+    }
+
+    private void postBypassChargingNotification(int level) {
+        Intent mainIntent = new Intent(INTENT_PARTS);
+        mainIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        PendingIntent mainPendingIntent = PendingIntent.getActivity(mContext, 0, mainIntent,
+                PendingIntent.FLAG_IMMUTABLE);
+
+        Notification notification = new Notification.Builder(mContext,
+                CHARGING_CONTROL_CHANNEL_ID)
+                .setContentTitle(mContext.getString(
+                        R.string.bypass_charging_notification_title))
+                .setContentText(mContext.getString(
+                        R.string.bypass_charging_notification_content, level))
+                .setContentIntent(mainPendingIntent)
+                .setSmallIcon(R.drawable.ic_charging_control)
+                .setOngoing(true)
+                .build();
+
+        createNotificationChannelIfNeeded();
+        mNotificationManager.notify(CHARGING_CONTROL_NOTIFICATION_ID, notification);
+    }
+
+    private boolean isBypassChargingActive() {
+        return Settings.Global.getInt(mContext.getContentResolver(),
+                BYPASS_CHARGE_ACTIVE, 0) == 1;
     }
 
     private void createNotificationChannelIfNeeded() {
